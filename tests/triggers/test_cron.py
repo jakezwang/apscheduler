@@ -13,6 +13,25 @@ def test_invalid_expression():
     exc.match("Unrecognized expression '2009-fault' for field 'year'")
 
 
+@pytest.mark.parametrize("expr", ["lastx", "last!", "last/2", "1st mon/2", "last fri!"])
+def test_invalid_day_expression(expr):
+    exc = pytest.raises(ValueError, CronTrigger, day=expr)
+    exc.match(f"Unrecognized expression {expr!r} for field 'day'")
+
+
+@pytest.mark.parametrize(
+    "expr, expected_day",
+    [("last", 31), ("LAST", 31), ("1st mon", 5), ("LAST FRI", 30)],
+)
+def test_special_day_expression(expr, expected_day, utc_timezone):
+    trigger = CronTrigger(
+        day=expr,
+        start_time=datetime(2026, 1, 1, tzinfo=utc_timezone),
+        timezone=utc_timezone,
+    )
+    assert trigger.next() == datetime(2026, 1, expected_day, tzinfo=utc_timezone)
+
+
 def test_invalid_step():
     exc = pytest.raises(ValueError, CronTrigger, year="2009/0")
     exc.match("step must be positive, got: 0")
