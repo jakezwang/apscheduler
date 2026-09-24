@@ -382,10 +382,6 @@ number of built-in trigger classes:
   use when you want to run the task on calendar-based intervals, at a specific time of
   day
 
-Special ``day`` expressions in :class:`~triggers.cron.CronTrigger`, such as ``last``
-and ``1st mon``, must match in full. Trailing characters, such as ``/2`` in
-``last/2``, raise :exc:`ValueError` instead of being ignored.
-
 Combining multiple triggers
 ---------------------------
 
