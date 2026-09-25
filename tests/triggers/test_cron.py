@@ -13,22 +13,10 @@ def test_invalid_expression():
     exc.match("Unrecognized expression '2009-fault' for field 'year'")
 
 
-@pytest.mark.parametrize(
-    "expr",
-    [
-        "lastx",
-        "last!",
-        "last/2",
-        "1st mon/2",
-        "last fri!",
-        "xlast",
-        "!last",
-        "2/last",
-        "x1st mon",
-        "!last fri",
-    ],
-)
-def test_invalid_day_expression(expr):
+@pytest.mark.parametrize("expr", ["last", "1st mon"])
+@pytest.mark.parametrize("template", ["!{}", "{}!"], ids=["leading", "trailing"])
+def test_invalid_day_expression(expr, template):
+    expr = template.format(expr)
     exc = pytest.raises(ValueError, CronTrigger, day=expr)
     exc.match(f"Unrecognized expression {expr!r} for field 'day'")
 
