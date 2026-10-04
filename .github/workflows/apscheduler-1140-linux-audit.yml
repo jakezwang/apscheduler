@@ -1,0 +1,44 @@
+name: APScheduler 1140 Python 3.10 validation
+
+on:
+  push:
+    branches: [audit/apscheduler-1140-linux-20261004]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v7
+        with:
+          ref: ab31b6aebe1321314761d6649346294fab2f9799
+          persist-credentials: false
+      - name: Verify candidate commit
+        run: test "$(git rev-parse HEAD)" = ab31b6aebe1321314761d6649346294fab2f9799
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.10'
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Start external services
+        run: docker compose up -d
+      - name: Install project and test dependencies
+        run: |
+          python -m pip install 'pip >= 25.1'
+          pip install --group test -e .
+      - name: Record versions
+        run: |
+          python --version
+          pip freeze
+      - name: Full suite with external services
+        run: coverage run -m pytest -v
+      - name: Repeat the failing asyncpg case
+        run: |
+          for attempt in 1 2 3 4 5; do
+            pytest -v 'tests/test_schedulers.py::TestAsyncScheduler::test_scheduler_crash_reap_abandoned_jobs[asyncpg]' || exit 1
+          done
